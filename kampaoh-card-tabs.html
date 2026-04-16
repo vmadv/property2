@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<title>Card tienda Kampaoh — tabs</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f0f0;padding:40px;}
+h3{font-size:12px;color:#999;text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;font-weight:700;}
+
+/* Layout escritorio */
+.desktop-layout{display:flex;gap:24px;max-width:1100px;margin:0 auto;}
+.sidebar{width:380px;flex-shrink:0;}
+.detail-panel{flex:1;background:#fff;border-radius:16px;padding:32px;border:1px solid #e8e8e8;display:flex;flex-direction:column;justify-content:space-between;}
+.detail-empty{color:#bbb;font-size:14px;text-align:center;margin:auto;}
+.detail-title{font-size:18px;font-weight:800;color:#111;margin-bottom:6px;}
+.detail-subtitle{font-size:13px;color:#888;margin-bottom:24px;}
+.detail-summary{background:#f7f7f7;border-radius:12px;padding:16px 20px;}
+.detail-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:#555;border-bottom:1px solid #efefef;}
+.detail-row:last-child{border:none;font-weight:800;color:#111;font-size:15px;}
+.detail-row span:last-child{font-weight:700;}
+.detail-row-sub{font-size:11px;color:#aaa;padding:3px 0;display:flex;justify-content:space-between;}
+.detail-row-sub span:last-child{font-weight:600;color:#888;}
+.detail-row-total{font-weight:700 !important;color:#111 !important;border-top:1px solid #e0e0e0 !important;margin-top:4px;padding-top:8px !important;font-size:13px !important;}
+
+/* Card */
+.card{background:#fff;border-radius:14px;overflow:hidden;border:1.5px solid #111;margin-bottom:12px;}
+.card-top{display:flex;height:115px;}
+.card-img{width:110px;flex-shrink:0;position:relative;overflow:hidden;}
+.card-img img{width:100%;height:100%;object-fit:cover;display:block;}
+.card-img-badge{position:absolute;bottom:6px;left:6px;background:rgba(0,0,0,.55);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;}
+.card-info{flex:1;padding:11px 12px;display:flex;flex-direction:column;justify-content:space-between;min-width:0;}
+.card-name{font-size:14px;font-weight:800;color:#111;}
+.card-link{font-size:11px;color:#f5a000;font-weight:600;margin-top:1px;text-decoration:none;}
+.card-meta{font-size:11px;color:#888;margin-top:3px;}
+.card-price{font-size:18px;font-weight:800;color:#111;}
+.card-price-per{font-size:11px;color:#888;}
+.tribe-price{font-size:11px;color:#e8a000;font-weight:600;margin-top:1px;}
+
+.card-bottom{border-top:1px solid #f0f0f0;}
+
+/* Selector cantidad */
+.qty-row{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;}
+.qty-label{font-size:13px;font-weight:700;color:#111;}
+.qty-ctrl{display:flex;align-items:center;}
+.qty-btn{width:32px;height:32px;border-radius:50%;border:1.5px solid #ddd;background:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#555;font-family:inherit;}
+.qty-num{width:36px;text-align:center;font-size:15px;font-weight:800;color:#111;}
+
+/* Sección distribución */
+.dist-section{overflow:hidden;max-height:0;transition:max-height .4s ease;}
+.dist-section.visible{max-height:900px;}
+.dist-inner{padding:0 14px;}
+
+/* Tabs: 1 fila ≤4, 2 filas >4 */
+.tent-tabs{display:flex;gap:4px;margin-bottom:12px;flex-wrap:nowrap;}
+.tent-tabs.multirow{flex-wrap:wrap;}
+.tent-tab{
+  flex:1;padding:7px 4px 6px;border-radius:8px;
+  border:1.5px solid #e8e8e8;background:#fff;
+  font-size:10px;font-weight:700;color:#888;
+  cursor:pointer;transition:all .15s;
+  text-align:center;line-height:1.35;font-family:inherit;
+  word-break:break-word;
+}
+.tent-tabs.multirow .tent-tab{flex:0 0 calc(50% - 2px);}
+.tent-tab.active{border-color:#111;background:#111;color:#fff;}
+.tent-tab.empty{border-color:#f5a000;}
+.tent-tab .tab-status{display:block;font-size:9px;font-weight:700;margin-top:2px;}
+.tent-tab.active .tab-status{color:#f5c518;}
+.tent-tab.empty:not(.active) .tab-status{color:#f5a000;}
+.tent-tab:not(.active):not(.empty) .tab-status{color:#bbb;}
+
+.tent-panel{display:none;}
+.tent-panel.active{display:block;}
+
+/* Aviso en panel */
+.panel-notice{background:#fff8e1;border:1px solid #f5a000;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:11px;color:#b76e00;font-weight:600;display:none;}
+.panel-notice.show{display:block;}
+
+.dist-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.dist-title{font-size:12px;font-weight:700;color:#555;}
+.dist-badge{font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;}
+.dist-badge.ok{background:#e8f5e9;color:#2e7d32;}
+.dist-badge.full{background:#fff3e0;color:#e65100;}
+
+.dist-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f5f5f5;}
+.dist-row:last-child{border-bottom:none;}
+.dist-row-label{font-size:13px;color:#444;font-weight:600;}
+.dist-row-sub{font-size:10px;color:#bbb;margin-top:1px;}
+.dist-row-ctrl{display:flex;align-items:center;}
+.dist-row-btn{width:30px;height:30px;border-radius:50%;border:1.5px solid #ddd;background:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#555;font-family:inherit;}
+.dist-row-btn:disabled{opacity:.3;cursor:default;}
+.dist-row-num{width:32px;text-align:center;font-size:14px;font-weight:700;color:#111;}
+
+/* Total + CTA */
+.card-cta{padding:0 14px 14px;}
+.total-bar{background:#f7f7f7;border-radius:10px;padding:9px 12px;margin:0 0 10px;display:flex;align-items:center;justify-content:space-between;}
+.total-label{font-size:11px;color:#888;}
+.total-val{font-size:12px;font-weight:800;color:#111;}
+.cta-pending{font-size:11px;color:#e8a000;text-align:center;font-weight:600;margin-bottom:6px;min-height:16px;}
+.cta-btn{width:100%;padding:13px;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .2s;}
+.sel-btn{background:linear-gradient(135deg,#f5c518,#e8b800);color:#1a1a1a;}
+</style>
+</head>
+<body>
+
+<div class="desktop-layout">
+<div class="sidebar">
+<h3>Elige tu alojamiento</h3>
+
+<div class="card" id="c1">
+  <div class="card-top">
+    <div class="card-img">
+      <img src="https://images.unsplash.com/photo-1478131143081-80f7f84ca84d?w=220&q=80" alt="Emperador El Rocío"/>
+      <div class="card-img-badge">1/3</div>
+    </div>
+    <div class="card-info">
+      <div>
+        <div class="card-name">Emperador El Rocío</div>
+        <a class="card-link" href="#">Ver alojamiento</a>
+        <div class="card-meta">6 personas &middot; 3 camas dobles 🛏🛏🛏</div>
+      </div>
+      <div>
+        <div><span class="card-price">116,38 €</span> <span class="card-price-per">/noche</span></div>
+        <div class="tribe-price">🔒 TRIBE Nivel 1: 110,56 €/noche</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-bottom">
+    <div class="qty-row">
+      <span class="qty-label">Número de alojamientos</span>
+      <div class="qty-ctrl">
+        <button class="qty-btn" onclick="changeQty(-1)">−</button>
+        <span class="qty-num" id="qty">1</span>
+        <button class="qty-btn" onclick="changeQty(1)">+</button>
+      </div>
+    </div>
+
+    <div class="dist-section" id="distSection">
+      <div class="dist-inner">
+        <div class="tent-tabs" id="tabs"></div>
+        <div id="panels"></div>
+      </div>
+    </div>
+
+    <div class="card-cta">
+      <div class="total-bar" id="totalBar" style="display:none">
+        <span class="total-label">Huéspedes totales</span>
+        <span class="total-val" id="totalVal">0 / 0</span>
+      </div>
+      <div class="cta-pending" id="ctaPending"></div>
+      <button class="cta-btn sel-btn" id="ctaBtn" onclick="onCTA()">Seleccionado ✓</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="detail-panel">
+  <div class="detail-empty" id="detailEmpty">Selecciona un alojamiento<br>para ver el resumen</div>
+  <div id="detailContent" style="display:none">
+    <div class="detail-title">Resumen de tu selección</div>
+    <div class="detail-subtitle">Emperador El Rocío</div>
+    <div class="detail-summary">
+      <div class="detail-row"><span>Alojamientos</span><span id="dQty">1</span></div>
+      <div class="detail-row"><span>Precio/noche</span><span>116,38 €</span></div>
+      <div id="dBreakdown"></div>
+      <div class="detail-row detail-row-total"><span>Total huéspedes</span><span id="dGuests">—</span></div>
+      <div class="detail-row"><span>Total 2 noches</span><span id="dTotal">232,76 €</span></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+var globalAdults   = 2;
+var globalChildren = 0;
+var globalBabies   = 0;
+
+var alojName      = 'Emperador El Rocío';
+var maxP          = 6;
+var pricePerNight = 116.38;
+var nights        = 2;
+var MAX_QTY       = 6;
+
+var qty      = 1;
+var at       = 0;
+var g        = {};
+var visited  = {};
+var reviewing = false;
+
+/* ── Inicialización ── */
+function initGuests() {
+  g = {};
+  for (var i = 0; i < qty; i++) {
+    g[i] = (i === 0)
+      ? { a: globalAdults, n: globalChildren, b: globalBabies }
+      : { a: 2, n: 0, b: 0 };
+  }
+}
+
+/* ── Render tabs ── */
+function renderTabs() {
+  var T = document.getElementById('tabs');
+  var P = document.getElementById('panels');
+  T.innerHTML = '';
+  P.innerHTML = '';
+  T.className = qty > 4 ? 'tent-tabs multirow' : 'tent-tabs';
+
+  for (var i = 0; i < qty; i++) {
+    (function(idx) {
+      var tot     = g[idx].a + g[idx].n + g[idx].b;
+      var isEmpty = tot === 0;
+      var cls     = 'tent-tab' + (idx === at ? ' active' : (isEmpty ? ' empty' : ''));
+
+      var tab = document.createElement('button');
+      tab.className = cls;
+      tab.id = 'tab' + idx;
+      tab.innerHTML = alojName + ' ' + (idx + 1) +
+        '<span class="tab-status">' + (isEmpty ? '⚠ sin huéspedes' : tot + '/' + maxP) + '</span>';
+      tab.onclick = function() { showTab(idx); };
+      T.appendChild(tab);
+
+      var panel = document.createElement('div');
+      panel.className = 'tent-panel' + (idx === at ? ' active' : '');
+      panel.id = 'panel' + idx;
+      panel.innerHTML = buildPanel(idx);
+      P.appendChild(panel);
+    })(i);
+  }
+}
+
+function buildPanel(idx) {
+  var d   = g[idx];
+  var tot = d.a + d.n + d.b;
+  var cls = tot >= maxP ? 'full' : 'ok';
+  var notice = '<div class="panel-notice' + (tot === 0 ? ' show' : '') + '" id="notice' + idx + '">' +
+    'Añade al menos un huésped para continuar</div>';
+  return notice +
+    '<div class="dist-header">' +
+    '<span class="dist-title">Distribuye los huéspedes</span>' +
+    '<span class="dist-badge ' + cls + '">' + tot + '/' + maxP + ' huéspedes</span></div>' +
+    dRow(idx, 'a', 'Adultos',  '18+ años', d.a) +
+    dRow(idx, 'n', 'Niños',   '4-17 años', d.n) +
+    dRow(idx, 'b', 'Bebés',   '0-3 años',  d.b);
+}
+
+function dRow(idx, k, label, sub, val) {
+  return '<div class="dist-row">' +
+    '<div><div class="dist-row-label">' + label + '</div>' +
+    '<div class="dist-row-sub">' + sub + '</div></div>' +
+    '<div class="dist-row-ctrl">' +
+    '<button class="dist-row-btn" onclick="chG(' + idx + ',\'' + k + '\',-1)"' +
+    (val <= 0 ? ' disabled' : '') + '>−</button>' +
+    '<span class="dist-row-num">' + val + '</span>' +
+    '<button class="dist-row-btn" onclick="chG(' + idx + ',\'' + k + '\',1)">+</button>' +
+    '</div></div>';
+}
+
+function showTab(idx) {
+  at = idx;
+  visited[idx] = true;
+  for (var i = 0; i < qty; i++) {
+    var t = document.getElementById('tab' + i);
+    var p = document.getElementById('panel' + i);
+    if (!t || !p) continue;
+    var tot     = g[i].a + g[i].n + g[i].b;
+    var isEmpty = tot === 0;
+    var cls = 'tent-tab';
+    if (i === idx)       cls += ' active';
+    else if (isEmpty)    cls += ' empty';
+    t.className = cls;
+    p.className = 'tent-panel' + (i === idx ? ' active' : '');
+  }
+  if (reviewing) updateCtaLabel();
+}
+
+function chG(idx, k, d) {
+  var tot = g[idx].a + g[idx].n + g[idx].b;
+  if (d > 0 && tot >= maxP) return;
+  g[idx][k] = Math.max(0, g[idx][k] + d);
+  renderTabs();
+  showTab(idx);
+  updateUI();
+}
+
+/* ── updateUI ── */
+function updateUI() {
+  var distSection = document.getElementById('distSection');
+  var totalBar    = document.getElementById('totalBar');
+
+  if (qty === 1) {
+    distSection.classList.remove('visible');
+    totalBar.style.display = 'none';
+    if (!reviewing) {
+      document.getElementById('ctaBtn').textContent = 'Seleccionado ✓';
+      document.getElementById('ctaPending').textContent = '';
+    }
+    syncDetail('—');
+    return;
+  }
+
+  distSection.classList.add('visible');
+  totalBar.style.display = 'flex';
+  renderTabs();
+
+  var tot = 0;
+  for (var i = 0; i < qty; i++) tot += g[i].a + g[i].n + g[i].b;
+  document.getElementById('totalVal').textContent = tot + ' / ' + (qty * maxP);
+
+  if (!reviewing) {
+    document.getElementById('ctaBtn').textContent = 'Seleccionado ✓';
+    document.getElementById('ctaPending').textContent = '';
+  }
+  syncDetail(tot + ' / ' + (qty * maxP));
+}
+
+/* ── Panel derecho ── */
+function syncDetail(guestLabel) {
+  document.getElementById('detailEmpty').style.display = 'none';
+  document.getElementById('detailContent').style.display = 'block';
+  document.getElementById('dQty').textContent = qty;
+  document.getElementById('dGuests').textContent = guestLabel;
+  document.getElementById('dTotal').textContent =
+    (pricePerNight * qty * nights).toFixed(2).replace('.', ',') + ' €';
+
+  var breakdown = document.getElementById('dBreakdown');
+  if (qty === 1) { breakdown.innerHTML = ''; return; }
+
+  var html = '';
+  for (var i = 0; i < qty; i++) {
+    var d   = g[i];
+    var tot = d.a + d.n + d.b;
+    var parts = [];
+    if (d.a > 0) parts.push(d.a + ' adulto' + (d.a > 1 ? 's' : ''));
+    if (d.n > 0) parts.push(d.n + ' niño'   + (d.n > 1 ? 's' : ''));
+    if (d.b > 0) parts.push(d.b + ' bebé'   + (d.b > 1 ? 's' : ''));
+    var label = parts.length ? parts.join(', ') : '—';
+    html += '<div class="detail-row-sub">' +
+      '<span>' + alojName + ' ' + (i + 1) + '</span>' +
+      '<span>' + label + ' (' + tot + '/' + maxP + ')</span></div>';
+  }
+  breakdown.innerHTML = html;
+}
+
+/* ── Wizard CTA ── */
+function nextUnvisited() {
+  for (var i = 0; i < qty; i++) { if (!visited[i]) return i; }
+  return -1;
+}
+function firstEmpty() {
+  for (var i = 0; i < qty; i++) {
+    if (g[i].a + g[i].n + g[i].b === 0) return i;
+  }
+  return -1;
+}
+function updateCtaLabel() {
+  var next = nextUnvisited();
+  if (next !== -1) {
+    document.getElementById('ctaBtn').textContent = 'Siguiente alojamiento →';
+    document.getElementById('ctaPending').textContent = 'Revisando ' + (at + 1) + ' de ' + qty;
+  } else {
+    document.getElementById('ctaBtn').textContent = 'Seleccionado ✓';
+    document.getElementById('ctaPending').textContent = '';
+  }
+}
+
+function onCTA() {
+  if (qty === 1) {
+    alert('Alojamiento seleccionado. Continuando…');
+    return;
+  }
+
+  // Bloquear si el tab actual no tiene huéspedes
+  if (g[at].a + g[at].n + g[at].b === 0) {
+    var notice = document.getElementById('notice' + at);
+    if (notice) notice.classList.add('show');
+    document.getElementById('ctaPending').textContent =
+      'Añade al menos un huésped al alojamiento ' + (at + 1);
+    return;
+  }
+
+  // ¿Hay tabs sin visitar?
+  var next = nextUnvisited();
+  if (next !== -1) {
+    reviewing = true;
+    showTab(next);
+    updateCtaLabel();
+    return;
+  }
+
+  // Todos visitados — ¿alguno vacío?
+  var emptyIdx = firstEmpty();
+  if (emptyIdx !== -1) {
+    reviewing = true;
+    showTab(emptyIdx);
+    var n2 = document.getElementById('notice' + emptyIdx);
+    if (n2) n2.classList.add('show');
+    document.getElementById('ctaPending').textContent =
+      'El alojamiento ' + (emptyIdx + 1) + ' no tiene huéspedes';
+    return;
+  }
+
+  // Todo OK
+  reviewing = false;
+  document.getElementById('ctaPending').textContent = '';
+  alert('Alojamiento seleccionado. Continuando…');
+}
+
+/* ── Cambio cantidad ── */
+function changeQty(d) {
+  var newQty = Math.max(1, Math.min(MAX_QTY, qty + d));
+  if (newQty === qty) return;
+  qty = newQty;
+  reviewing = false;
+  visited   = {};
+  document.getElementById('qty').textContent = qty;
+  if (at >= qty) at = qty - 1;
+  for (var i = 0; i < qty; i++) {
+    if (!g[i]) g[i] = { a: 2, n: 0, b: 0 };
+  }
+  visited[0] = true;
+  updateUI();
+  if (qty > 1) showTab(at);
+}
+
+/* ── Arranque ── */
+initGuests();
+visited[0] = true;
+updateUI();
+</script>
+</body>
+</html>
