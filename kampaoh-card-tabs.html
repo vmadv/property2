@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Kampaoh — Alojamientos</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#fff;color:#111;font-size:14px;}
+
+/* ── Nav de secciones ── */
+.section-nav{border-bottom:1px solid #e8e8e8;padding:0 40px;display:flex;gap:0;}
+.section-nav a{padding:14px 18px;font-size:13px;font-weight:600;color:#555;text-decoration:none;border-bottom:2px solid transparent;white-space:nowrap;}
+.section-nav a.active{color:#111;border-bottom-color:#111;}
+.section-nav a:hover{color:#111;}
+
+/* ── Layout principal ── */
+.page-layout{display:flex;align-items:flex-start;max-width:1200px;margin:0 auto;padding:28px 40px;gap:32px;}
+.content{flex:1;min-width:0;}
+.sidebar-right{width:320px;flex-shrink:0;position:sticky;top:20px;}
+
+/* ── Encabezado lista ── */
+.list-header{margin-bottom:16px;}
+.list-title{font-size:20px;font-weight:800;display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.list-title span{font-size:16px;}
+.filters{display:flex;gap:8px;flex-wrap:wrap;}
+.filter-chip{padding:6px 14px;border-radius:20px;border:1px solid #ddd;font-size:12px;font-weight:600;color:#444;cursor:pointer;background:#fff;display:flex;align-items:center;gap:5px;}
+.filter-chip:hover{border-color:#aaa;}
+
+/* ── Cards de alojamiento ── */
+.acc-card{border:1.5px solid #e8e8e8;border-radius:14px;overflow:hidden;margin-bottom:16px;transition:border-color .2s;}
+.acc-card.selected{border-color:#f5a000;}
+
+.acc-card-top{display:flex;min-height:160px;}
+.acc-card-photo{width:260px;flex-shrink:0;position:relative;overflow:hidden;cursor:pointer;}
+.acc-card-photo img{width:100%;height:100%;object-fit:cover;display:block;}
+.photo-badge{position:absolute;top:10px;left:10px;background:#f5a000;color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:4px;}
+.photo-counter{position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,.5);color:#fff;font-size:10px;padding:2px 7px;border-radius:10px;}
+
+.acc-card-info{flex:1;padding:16px 20px;display:flex;flex-direction:column;justify-content:space-between;}
+.acc-name{font-size:16px;font-weight:800;color:#111;margin-bottom:3px;}
+.acc-link{font-size:12px;color:#f5a000;font-weight:600;text-decoration:none;display:block;margin-bottom:6px;}
+.acc-meta{font-size:12px;color:#666;margin-bottom:4px;display:flex;align-items:center;gap:6px;}
+.acc-alert{color:#e53935;font-size:12px;font-weight:700;display:flex;align-items:center;gap:4px;margin-bottom:6px;}
+.acc-beds{font-size:12px;color:#555;margin-bottom:10px;}
+
+.acc-price-row{display:flex;align-items:flex-end;justify-content:space-between;margin-top:auto;}
+.acc-price-block{}
+.acc-price-old{font-size:12px;color:#aaa;text-decoration:line-through;}
+.acc-price{font-size:22px;font-weight:800;color:#111;}
+.acc-price-per{font-size:12px;color:#888;}
+.tribe-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#b8860b;font-weight:700;background:#fffbea;border:1px solid #f5c518;border-radius:4px;padding:2px 8px;margin-top:4px;}
+
+/* Selector de cantidad — inline en la card */
+.qty-inline{display:flex;align-items:center;gap:6px;}
+.qty-btn{width:34px;height:34px;border-radius:50%;border:1.5px solid #ddd;background:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#555;font-family:inherit;line-height:1;}
+.qty-num{width:28px;text-align:center;font-size:16px;font-weight:800;}
+
+/* ── Zona expandible de huéspedes ── */
+.guests-section{border-top:1px solid #f0f0f0;padding:16px 20px;}
+
+/* Tabs: una fila, se adaptan al ancho; >4 → dos filas */
+.guest-tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:nowrap;}
+.guest-tabs.multirow{flex-wrap:wrap;}
+.guest-tab{
+  flex:1;padding:8px 6px 7px;
+  border-radius:8px;border:1.5px solid #e0e0e0;background:#fff;
+  font-size:11px;font-weight:700;color:#888;
+  cursor:pointer;text-align:center;line-height:1.35;font-family:inherit;
+  transition:all .15s;word-break:break-word;
+}
+.guest-tabs.multirow .guest-tab{flex:0 0 calc(50% - 3px);}
+.guest-tab.active{border-color:#111;background:#111;color:#fff;}
+.guest-tab.empty{border-color:#f5a000;}
+.guest-tab .tab-count{display:block;font-size:10px;font-weight:700;margin-top:2px;}
+.guest-tab.active .tab-count{color:#f5c518;}
+.guest-tab.empty:not(.active) .tab-count{color:#f5a000;}
+.guest-tab:not(.active):not(.empty) .tab-count{color:#bbb;}
+
+/* Bloque estático de distribución */
+.guest-block{background:#fafafa;border-radius:10px;padding:12px 16px;}
+.guest-block-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.guest-block-title{font-size:12px;font-weight:700;color:#555;}
+.guest-block-badge{font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;}
+.guest-block-badge.ok{background:#e8f5e9;color:#2e7d32;}
+.guest-block-badge.full{background:#fff3e0;color:#e65100;}
+.dist-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #efefef;}
+.dist-row:last-child{border-bottom:none;}
+.dist-row-label{font-size:13px;color:#333;font-weight:600;}
+.dist-row-sub{font-size:10px;color:#bbb;margin-top:1px;}
+.dist-ctrl{display:flex;align-items:center;}
+.dist-btn{width:30px;height:30px;border-radius:50%;border:1.5px solid #ddd;background:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#555;font-family:inherit;}
+.dist-btn:disabled{opacity:.3;cursor:default;}
+.dist-num{width:32px;text-align:center;font-size:14px;font-weight:700;color:#111;}
+
+.guests-footer{display:flex;align-items:center;justify-content:space-between;margin-top:14px;gap:12px;}
+.total-pill{background:#f0f0f0;border-radius:8px;padding:7px 14px;font-size:11px;color:#666;white-space:nowrap;}
+.total-pill strong{color:#111;font-weight:800;}
+.cta-notice{font-size:11px;color:#e8a000;font-weight:600;flex:1;text-align:right;}
+.cta-btn{padding:11px 24px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;}
+.cta-btn.sel{background:linear-gradient(135deg,#f5c518,#e8b800);color:#1a1a1a;}
+
+/* Card sin expandir */
+.acc-card-cta{padding:14px 20px 16px;border-top:1px solid #f0f0f0;}
+.btn-select{width:100%;padding:11px;border:1.5px solid #ddd;border-radius:10px;background:#fff;font-size:13px;font-weight:700;color:#555;cursor:pointer;font-family:inherit;}
+.btn-select:hover{border-color:#aaa;color:#111;}
+
+/* ── Panel derecho ── */
+.panel{background:#fff;border:1px solid #e0e0e0;border-radius:16px;padding:24px;font-size:13px;}
+.panel-price{font-size:26px;font-weight:800;margin-bottom:4px;}
+.panel-price span{font-size:14px;font-weight:400;color:#888;}
+.panel-rating{float:right;font-size:13px;font-weight:700;color:#111;display:flex;align-items:center;gap:4px;}
+.panel-rating::before{content:"★";color:#f5c518;}
+.panel-season{background:#fef9ec;border-radius:8px;padding:8px 12px;font-size:12px;color:#888;margin-bottom:16px;display:flex;align-items:center;gap:6px;}
+.panel-season::before{content:"📅";font-size:13px;}
+.panel-dates{display:flex;gap:1px;margin-bottom:16px;}
+.panel-date{flex:1;border:1px solid #ddd;border-radius:8px;padding:10px 14px;}
+.panel-date:first-child{border-radius:8px 0 0 8px;}
+.panel-date:last-child{border-radius:0 8px 8px 0;}
+.panel-date-label{font-size:10px;font-weight:700;text-transform:uppercase;color:#888;margin-bottom:3px;}
+.panel-date-val{font-size:13px;font-weight:700;}
+.panel-guests{border:1px solid #ddd;border-radius:8px;padding:10px 14px;margin-bottom:20px;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;}
+.panel-guests::before{content:"👤";font-size:14px;}
+.panel-section-label{font-size:10px;font-weight:800;text-transform:uppercase;color:#888;letter-spacing:.5px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}
+.panel-section-label a{font-size:11px;color:#f5a000;text-transform:none;letter-spacing:0;font-weight:700;text-decoration:none;}
+.panel-acc-item{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.panel-acc-thumb{width:48px;height:48px;border-radius:8px;object-fit:cover;flex-shrink:0;}
+.panel-acc-info{}
+.panel-acc-name{font-size:13px;font-weight:700;}
+.panel-acc-sub{font-size:11px;color:#888;margin-top:2px;}
+.panel-acc-pax{font-size:11px;color:#555;margin-top:1px;font-weight:600;}
+.panel-divider{border:none;border-top:1px solid #f0f0f0;margin:16px 0;}
+.panel-regime-chip{display:inline-block;border:1.5px solid #f5a000;color:#f5a000;border-radius:20px;padding:5px 14px;font-size:12px;font-weight:700;margin-bottom:16px;}
+.panel-tariff{border:1.5px solid #f5c518;border-radius:10px;padding:12px 14px;margin-bottom:16px;position:relative;}
+.panel-tariff-label{font-size:12px;font-weight:800;margin-bottom:2px;}
+.panel-tariff-price{font-size:18px;font-weight:800;}
+.panel-tariff-note{font-size:11px;color:#e53935;margin-top:4px;display:flex;align-items:center;gap:4px;}
+.panel-tariff-check{position:absolute;top:10px;right:12px;background:#f5c518;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;}
+.panel-total-row{display:flex;justify-content:space-between;font-size:13px;color:#555;margin-bottom:6px;}
+.panel-total-row.bold{font-weight:800;font-size:15px;color:#111;margin-top:6px;}
+.panel-total-row.sub{font-size:11px;color:#888;}
+.panel-reserve-btn{width:100%;padding:15px;background:#f5c518;border:none;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:14px;margin-bottom:10px;}
+.panel-badges{display:flex;justify-content:center;gap:16px;font-size:11px;color:#888;}
+.panel-badges span{display:flex;align-items:center;gap:4px;}
+</style>
+</head>
+<body>
+
+<!-- Nav secciones -->
+<nav class="section-nav">
+  <a href="#" class="active">Alojamientos</a>
+  <a href="#">Descripción</a>
+  <a href="#">Instalaciones y servicios</a>
+  <a href="#">Opiniones</a>
+  <a href="#">Condiciones</a>
+  <a href="#">Mapa</a>
+</nav>
+
+<!-- Layout principal -->
+<div class="page-layout">
+
+  <!-- Columna izquierda: lista de alojamientos -->
+  <div class="content">
+    <div class="list-header">
+      <div class="list-title">⛺ Alojamientos disponibles <span>(5)</span></div>
+      <div class="filters">
+        <button class="filter-chip">🐾 Mascotas</button>
+        <button class="filter-chip">🛁 Baño privado</button>
+        <button class="filter-chip">Mejor precio</button>
+      </div>
+    </div>
+
+    <!-- CARD SELECCIONADA: Emperador El Rocío -->
+    <div class="acc-card selected" id="mainCard">
+      <div class="acc-card-top">
+        <div class="acc-card-photo">
+          <img src="https://images.unsplash.com/photo-1478131143081-80f7f84ca84d?w=520&q=80" alt="Emperador El Rocío"/>
+          <div class="photo-badge">Más reservado</div>
+          <div class="photo-counter">1 / 6</div>
+        </div>
+        <div class="acc-card-info">
+          <div>
+            <div class="acc-name">Emperador El Rocío</div>
+            <a class="acc-link" href="#">Ver alojamiento</a>
+            <div class="acc-meta">6 personas &middot; 🛁 Baño privado</div>
+            <div class="acc-alert">● Nos quedan 3</div>
+            <div class="acc-beds">3 camas dobles 🛏🛏🛏</div>
+          </div>
+          <div class="acc-price-row">
+            <div class="acc-price-block">
+              <div class="acc-price-old">134,00 € /noche</div>
+              <div><span class="acc-price">116,38 €</span> <span class="acc-price-per">/noche</span></div>
+              <div class="tribe-badge">👑 TRIBE Nivel 1</div>
+            </div>
+            <div class="qty-inline">
+              <button class="qty-btn" onclick="changeQty(-1)">−</button>
+              <span class="qty-num" id="qtyNum">1</span>
+              <button class="qty-btn" onclick="changeQty(1)">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Zona de huéspedes (aparece cuando qty >= 2) -->
+      <div class="guests-section" id="guestsSection" style="display:none">
+
+        <!-- Tabs -->
+        <div class="guest-tabs" id="guestTabs"></div>
+
+        <!-- Bloque estático de distribución -->
+        <div class="guest-block" id="guestBlock"></div>
+
+        <!-- Footer: total + CTA -->
+        <div class="guests-footer">
+          <div class="total-pill">Huéspedes totales: <strong id="totalVal">0 / 0</strong></div>
+          <span class="cta-notice" id="ctaNotice"></span>
+          <button class="cta-btn sel" onclick="onCTA()">Seleccionado ✓</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2 -->
+    <div class="acc-card">
+      <div class="acc-card-top">
+        <div class="acc-card-photo">
+          <img src="https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=520&q=80" alt="Tiny Yuca"/>
+          <div class="photo-counter">1 / 2</div>
+        </div>
+        <div class="acc-card-info">
+          <div>
+            <div class="acc-name">Tiny Yuca Las Arenas</div>
+            <a class="acc-link" href="#">Ver alojamiento</a>
+            <div class="acc-meta">3 personas &middot; 🛁 Baño privado</div>
+            <div class="acc-beds">2 camas dobles 🛏🛏</div>
+          </div>
+          <div class="acc-price-row">
+            <div>
+              <div class="acc-price-old">35,00 € /noche</div>
+              <div><span class="acc-price">33,25 €</span> <span class="acc-price-per">/noche</span></div>
+              <div class="tribe-badge">👑 TRIBE Nivel 1</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="acc-card-cta"><button class="btn-select">Selecciona alojamiento</button></div>
+    </div>
+
+    <!-- Card 3 -->
+    <div class="acc-card">
+      <div class="acc-card-top">
+        <div class="acc-card-photo">
+          <img src="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=520&q=80" alt="Parcela XL"/>
+          <div class="photo-counter">1 / 2</div>
+        </div>
+        <div class="acc-card-info">
+          <div>
+            <div class="acc-name">Parcela XL con vistas</div>
+            <a class="acc-link" href="#">Ver alojamiento</a>
+            <div class="acc-meta">6 personas</div>
+            <div class="acc-beds">4 camas 🛏🛏🛏🛏</div>
+          </div>
+          <div class="acc-price-row">
+            <div>
+              <div class="acc-price-old">30,00 € /noche</div>
+              <div><span class="acc-price">28,50 €</span> <span class="acc-price-per">/noche</span></div>
+              <div class="tribe-badge">👑 TRIBE Nivel 1</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="acc-card-cta"><button class="btn-select">Selecciona alojamiento</button></div>
+    </div>
+
+  </div><!-- /content -->
+
+  <!-- Panel derecho -->
+  <div class="sidebar-right">
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+        <div class="panel-price">116,38 € <span>/noche</span></div>
+        <div class="panel-rating">8.83</div>
+      </div>
+      <div class="panel-season">Temporada: 27 mar — 2 nov 2026</div>
+      <div class="panel-dates">
+        <div class="panel-date">
+          <div class="panel-date-label">Entrada</div>
+          <div class="panel-date-val">17 abr 2026</div>
+        </div>
+        <div class="panel-date">
+          <div class="panel-date-label">Salida</div>
+          <div class="panel-date-val">19 abr 2026</div>
+        </div>
+      </div>
+      <div class="panel-guests">2 adultos</div>
+
+      <div class="panel-section-label">
+        Alojamientos seleccionados
+        <a href="#">Quitar todos</a>
+      </div>
+      <div class="panel-acc-item">
+        <img class="panel-acc-thumb" src="https://images.unsplash.com/photo-1478131143081-80f7f84ca84d?w=100&q=80"/>
+        <div class="panel-acc-info">
+          <div class="panel-acc-name">Emperador El Rocío</div>
+          <div class="panel-acc-sub">⊙ Camping El Rocío</div>
+          <div class="panel-acc-pax" id="panelPax">2 adultos</div>
+        </div>
+      </div>
+
+      <hr class="panel-divider"/>
+      <div class="panel-section-label">Régimen</div>
+      <div class="panel-regime-chip">Solo Alojamiento</div>
+      <div class="panel-section-label">Tipo de tarifa</div>
+      <div class="panel-tariff">
+        <div class="panel-tariff-label">FLEX</div>
+        <div class="panel-tariff-price" id="panelPrice">232,76 €</div>
+        <div class="panel-tariff-note">✕ No reembolsable</div>
+        <div class="panel-tariff-check">✓</div>
+      </div>
+
+      <div class="panel-total-row"><span id="panelNights">116,38 € x 2 noches</span><span id="panelSubtotal">232,76 €</span></div>
+      <div class="panel-total-row bold"><span>Total</span><span id="panelTotal">232,76 €</span></div>
+      <div class="panel-total-row sub"><span>Pago ahora (50%)</span><span id="panelDeposit">116,38 €</span></div>
+
+      <button class="panel-reserve-btn">RESERVAR</button>
+      <div class="panel-badges">
+        <span>✕ No reembolsable</span>
+        <span>🌿 1% medioambiente</span>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page-layout -->
+
+<script>
+var globalAdults   = 2;
+var globalChildren = 0;
+var globalBabies   = 0;
+
+var alojName      = 'Emperador El Rocío';
+var maxP          = 6;
+var pricePerNight = 116.38;
+var nights        = 2;
+var MAX_QTY       = 6;
+
+var qty     = 1;
+var at      = 0;
+var g       = {};
+var visited = {};
+
+function initGuests() {
+  for (var i = 0; i < qty; i++) {
+    if (!g[i]) {
+      g[i] = (i === 0)
+        ? { a: globalAdults, n: globalChildren, b: globalBabies }
+        : { a: 2, n: 0, b: 0 };
+    }
+  }
+}
+
+/* ── Tabs ── */
+function renderTabs() {
+  var T = document.getElementById('guestTabs');
+  T.innerHTML = '';
+  T.className = qty > 4 ? 'guest-tabs multirow' : 'guest-tabs';
+
+  for (var i = 0; i < qty; i++) {
+    (function(idx) {
+      var tot     = g[idx].a + g[idx].n + g[idx].b;
+      var isEmpty = tot === 0;
+      var cls = 'guest-tab' + (idx === at ? ' active' : (isEmpty ? ' empty' : ''));
+      var tab = document.createElement('button');
+      tab.className = cls;
+      tab.id = 'gtab' + idx;
+      tab.innerHTML = alojName + ' ' + (idx + 1) +
+        '<span class="tab-count">' + (isEmpty ? '⚠ sin huéspedes' : tot + '/' + maxP) + '</span>';
+      tab.onclick = function() { switchTab(idx); };
+      T.appendChild(tab);
+    })(i);
+  }
+}
+
+/* ── Bloque estático de distribución ── */
+function renderBlock() {
+  var d   = g[at];
+  var tot = d.a + d.n + d.b;
+  var cls = tot >= maxP ? 'full' : 'ok';
+  document.getElementById('guestBlock').innerHTML =
+    '<div class="guest-block-head">' +
+      '<span class="guest-block-title">Distribuye los huéspedes</span>' +
+      '<span class="guest-block-badge ' + cls + '">' + tot + '/' + maxP + ' huéspedes</span>' +
+    '</div>' +
+    dRow(at, 'a', 'Adultos',  '18+ años', d.a) +
+    dRow(at, 'n', 'Niños',   '4-17 años', d.n) +
+    dRow(at, 'b', 'Bebés',   '0-3 años',  d.b);
+}
+
+function dRow(idx, k, label, sub, val) {
+  return '<div class="dist-row">' +
+    '<div><div class="dist-row-label">' + label + '</div>' +
+    '<div class="dist-row-sub">' + sub + '</div></div>' +
+    '<div class="dist-ctrl">' +
+    '<button class="dist-btn" onclick="chG(' + idx + ',\'' + k + '\',-1)"' +
+    (val <= 0 ? ' disabled' : '') + '>−</button>' +
+    '<span class="dist-num">' + val + '</span>' +
+    '<button class="dist-btn" onclick="chG(' + idx + ',\'' + k + '\',1)">+</button>' +
+    '</div></div>';
+}
+
+function switchTab(idx) {
+  at = idx;
+  visited[idx] = true;
+  renderTabs();
+  renderBlock();
+  updateFooter();
+}
+
+function chG(idx, k, d) {
+  var tot = g[idx].a + g[idx].n + g[idx].b;
+  if (d > 0 && tot >= maxP) return;
+  g[idx][k] = Math.max(0, g[idx][k] + d);
+  renderTabs();
+  renderBlock();
+  updateFooter();
+}
+
+/* ── Footer totales ── */
+function updateFooter() {
+  var tot = 0;
+  for (var i = 0; i < qty; i++) tot += g[i].a + g[i].n + g[i].b;
+  document.getElementById('totalVal').textContent = tot + ' / ' + (qty * maxP);
+  document.getElementById('ctaNotice').textContent = '';
+  updatePanel();
+}
+
+/* ── Panel derecho ── */
+function updatePanel() {
+  var tot = 0;
+  for (var i = 0; i < qty; i++) tot += g[i].a + g[i].n + g[i].b;
+
+  // Pax label
+  var parts = [];
+  var ta = 0, tn = 0, tb = 0;
+  for (var j = 0; j < qty; j++) { ta += g[j].a; tn += g[j].n; tb += g[j].b; }
+  if (ta > 0) parts.push(ta + ' adulto' + (ta > 1 ? 's' : ''));
+  if (tn > 0) parts.push(tn + ' niño'   + (tn > 1 ? 's' : ''));
+  if (tb > 0) parts.push(tb + ' bebé'   + (tb > 1 ? 's' : ''));
+  document.getElementById('panelPax').textContent = (qty > 1 ? qty + ' alojamientos · ' : '') + (parts.join(', ') || '—');
+
+  var total   = pricePerNight * qty * nights;
+  var deposit = total / 2;
+  document.getElementById('panelNights').textContent  = pricePerNight.toFixed(2).replace('.',',') + ' € x ' + nights + ' noches' + (qty > 1 ? ' x ' + qty : '');
+  document.getElementById('panelSubtotal').textContent = total.toFixed(2).replace('.',',') + ' €';
+  document.getElementById('panelPrice').textContent    = total.toFixed(2).replace('.',',') + ' €';
+  document.getElementById('panelTotal').textContent    = total.toFixed(2).replace('.',',') + ' €';
+  document.getElementById('panelDeposit').textContent  = deposit.toFixed(2).replace('.',',') + ' €';
+}
+
+/* ── CTA ── */
+function onCTA() {
+  // Buscar primer tab sin visitar
+  for (var i = 0; i < qty; i++) {
+    if (!visited[i]) {
+      switchTab(i);
+      document.getElementById('ctaNotice').textContent =
+        'Revisa el alojamiento ' + (i + 1) + ' antes de continuar';
+      return;
+    }
+  }
+  // Todos visitados — alguno sin huéspedes?
+  for (var j = 0; j < qty; j++) {
+    if (g[j].a + g[j].n + g[j].b === 0) {
+      switchTab(j);
+      document.getElementById('ctaNotice').textContent =
+        'El alojamiento ' + (j + 1) + ' no tiene huéspedes';
+      return;
+    }
+  }
+  alert('Alojamiento seleccionado. Continuando…');
+}
+
+/* ── Cambio cantidad ── */
+function changeQty(d) {
+  var newQty = Math.max(1, Math.min(MAX_QTY, qty + d));
+  if (newQty === qty) return;
+  qty = newQty;
+  document.getElementById('qtyNum').textContent = qty;
+  if (at >= qty) at = qty - 1;
+  initGuests();
+  visited = {};
+  visited[0] = true;
+
+  var sec = document.getElementById('guestsSection');
+  if (qty >= 2) {
+    sec.style.display = 'block';
+    at = 0;
+    renderTabs();
+    renderBlock();
+    updateFooter();
+  } else {
+    sec.style.display = 'none';
+    updatePanel();
+  }
+}
+
+/* ── Arranque ── */
+initGuests();
+visited[0] = true;
+updatePanel();
+</script>
+</body>
+</html>
